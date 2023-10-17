@@ -19,7 +19,7 @@ def play_sound(sound, volume):
 
 
 #
-#
+# 
 #
 def play_sounds_list(sounds_list):
     for sound in sounds_list:
@@ -73,11 +73,10 @@ def main():
     while True:
         #play_sounds_list(chromatic)
         pot = MCP3008(0)
-        print(pot.value)
-        if pot.value > 0.5:
-            play_sound(chromatic[0], volume)
-        sleep(0.1)
-
+        volume = int(pot.value * 100)
+        print("Volume: " + str(volume))
+        play_sound(chromatic[0], volume)
+        time.sleep(0.3)
     
 
 #
