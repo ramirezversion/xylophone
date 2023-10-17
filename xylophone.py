@@ -3,7 +3,6 @@ import time
 from gpiozero import MCP3008
 from time import sleep
 
-
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 volume = 80
 chromatic = []
@@ -14,8 +13,8 @@ diatonic = []
 #
 #
 def play_sound(sound, volume):
-    os.system("amixer -M sset PCM " + str(volume) + "%")
-    os.system("aplay " + sounds_path + sound + "&")
+    os.system("amixer -M sset PCM " + str(volume) + "% > /dev/null 2>&1")
+    os.system("aplay " + sounds_path + sound + " > /dev/null 2>&1 &")
 
 
 #
@@ -74,7 +73,8 @@ def main():
         #play_sounds_list(chromatic)
         pot = MCP3008(0)
         volume = int(pot.value * 100)
-        print("Volume: " + str(volume))
+        print("--------------- Volume: " + str(volume))
+
         play_sound(chromatic[0], volume)
         time.sleep(0.3)
     
