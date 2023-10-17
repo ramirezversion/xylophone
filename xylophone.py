@@ -2,13 +2,14 @@ import os
 import time
 from gpiozero import MCP3008
 from time import sleep
+import threading
 
 
 #
 # Global variables
 #
 sounds_path = "/home/pi/xylophone" + "/sounds/"
-volume = 20
+global_volume = 20
 chromatic = []
 diatonic = []
 
@@ -16,8 +17,9 @@ diatonic = []
 #
 # Play one sound with volume setted by 'volume' global variable, sending all outputs to dev null from os execution
 #
-def play_sound(sound, volume):
-    os.system("amixer -M sset PCM " + str(volume) + "% > /dev/null 2>&1")
+def play_sound(sound):
+    global global_volume
+    os.system("amixer -M sset PCM " + str(global_volume) + "% > /dev/null 2>&1")
     os.system("aplay " + sounds_path + sound + " > /dev/null 2>&1 &")
 
 
@@ -25,9 +27,32 @@ def play_sound(sound, volume):
 # Play sounds list (only for testing)
 #
 def play_sounds_list(sounds_list):
-    for sound in sounds_list:
-        play_sound(sound, volume)
-        time.sleep(0.3)
+    while True:
+        try:
+            for sound in sounds_list:
+                global global_volume
+                play_sound(sound)
+                time.sleep(0.3)
+        except KeyboardInterrupt:
+            break
+        except:
+            continue
+
+
+#
+# Modify volume
+#
+def set_volume():
+    global global_volume
+    while True:
+        try:
+            pot = MCP3008(0)
+            global_volume = int(pot.value * 100)
+            print("- Volume: " + str(global_volume))
+        except KeyboardInterrupt:
+            break
+        except:
+            continue
 
 
 #
@@ -43,6 +68,7 @@ def load_sounds(path):
             files.append(file_path)
     return sorted(files)
 
+
 #
 # Print header, include some ascii art better
 #
@@ -52,6 +78,7 @@ def print_header():
     print("- Starting Xylophone -")
     print("----------------------")
     print()
+
 
 #
 # Main
@@ -73,18 +100,13 @@ def main():
     print(diatonic)
     print()
 
-    # Never ending loop
-    while True:
-        # Read value from volume potentiometer and assign to global variable
-        pot = MCP3008(0)
-        volume = int(pot.value * 100)
-        print("- Volume: " + str(volume))
+    t1 = threading.Thread(target=set_volume, args=())
+    t2 = threading.Thread(target=play_sounds_list, args=(chromatic,))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
 
-        # Reproduce a sound to test volume potentiometer
-        #play_sounds_list(chromatic)
-        play_sound(chromatic[0], volume)
-        time.sleep(0.3)
-    
 
 #
 # Main function
