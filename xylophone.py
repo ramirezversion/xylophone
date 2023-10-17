@@ -3,14 +3,18 @@ import time
 from gpiozero import MCP3008
 from time import sleep
 
+
+#
+# Global variables
+#
 sounds_path = "/home/pi/xylophone" + "/sounds/"
-volume = 80
+volume = 20
 chromatic = []
 diatonic = []
 
 
 #
-#
+# Play one sound with volume setted by 'volume' global variable, sending all outputs to dev null from os execution
 #
 def play_sound(sound, volume):
     os.system("amixer -M sset PCM " + str(volume) + "% > /dev/null 2>&1")
@@ -18,7 +22,7 @@ def play_sound(sound, volume):
 
 
 #
-# 
+# Play sounds list (only for testing)
 #
 def play_sounds_list(sounds_list):
     for sound in sounds_list:
@@ -27,7 +31,7 @@ def play_sounds_list(sounds_list):
 
 
 #
-#
+# Read and load sounds from sounds folder path
 #
 def load_sounds(path):
     files = []
@@ -40,7 +44,7 @@ def load_sounds(path):
     return sorted(files)
 
 #
-#
+# Print header, include some ascii art better
 #
 def print_header():
     print()
@@ -50,13 +54,14 @@ def print_header():
     print()
 
 #
-#
+# Main
 #
 def main():
-    # Your program goes here
+    # Print header
     print_header()
     print("... loading sounds")
     print()
+    # Load sounds and print output
     chromatic = load_sounds(sounds_path)
     print("- chromatic loaded!")
     print(chromatic)
@@ -68,19 +73,21 @@ def main():
     print(diatonic)
     print()
 
-    #play sounds
+    # Never ending loop
     while True:
-        #play_sounds_list(chromatic)
+        # Read value from volume potentiometer and assign to global variable
         pot = MCP3008(0)
         volume = int(pot.value * 100)
-        print("--------------- Volume: " + str(volume))
+        print("- Volume: " + str(volume))
 
+        # Reproduce a sound to test volume potentiometer
+        #play_sounds_list(chromatic)
         play_sound(chromatic[0], volume)
         time.sleep(0.3)
     
 
 #
-#
+# Main function
 #
 if __name__ == '__main__':
     main()
