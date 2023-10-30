@@ -10,6 +10,10 @@ import threading
 #
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 global_volume = 20
+sensitivity = [25,25,25,25,25,25,85,25]
+max_play_time = [100,100,100,100,100,100,100,100]
+active_pad = [0,0,0,0,0,0,0,0]
+pad_play_time = [0,0,0,0,0,0,0,0]
 chromatic = []
 diatonic = []
 
@@ -24,15 +28,27 @@ def play_sound(sound):
 
 
 #
-# Play sounds list (only for testing)
+# Read sensors and play sounds
 #
-def play_sounds_list(sounds_list):
+def read_and_play_sounds(sounds_list):
+    global max_play_time
     while True:
         try:
-            for sound in sounds_list:
-                global global_volume
-                play_sound(sound)
-                time.sleep(0.3)
+            #for sound in sounds_list:
+            #    global global_volume
+            #    play_sound(sound)
+            #    time.sleep(0.3)
+            for i in range(6,8):
+                press = MCP3008(i)
+                if int(press.value * 100) > sensitivity[i] and active_pad[i] == 0:
+                    active_pad[i] = 1
+                    print("playing sound: " + str(press.value*100))
+                    play_sound(sounds_list[i-6])
+                    time.sleep(0.1)                    
+                elif active_pad[i] == 1:
+                    pad_play_time[i] += 1
+                    if pad_play_time[i] > max_play_time[i]:
+                        active_pad[i] = 0
         except KeyboardInterrupt:
             break
         except:
@@ -48,7 +64,7 @@ def set_volume():
         try:
             pot = MCP3008(0)
             global_volume = int(pot.value * 100)
-            print("- Volume: " + str(global_volume))
+            #print("- Volume: " + str(global_volume))
         except KeyboardInterrupt:
             break
         except:
@@ -101,7 +117,7 @@ def main():
     print()
 
     t1 = threading.Thread(target=set_volume, args=())
-    t2 = threading.Thread(target=play_sounds_list, args=(chromatic,))
+    t2 = threading.Thread(target=read_and_play_sounds, args=(chromatic,))
     t1.start()
     t2.start()
     t1.join()
