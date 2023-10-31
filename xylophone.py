@@ -3,7 +3,8 @@ import time
 from gpiozero import MCP3008
 from time import sleep
 import threading
-
+import soundfile as sf
+import sounddevice as sd
 
 #
 # Global variables
@@ -11,10 +12,10 @@ import threading
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 global_volume = 20
 sensitivity = [25,25,25,25,25,25,15,15]
-max_play_time = 0.075
+max_play_time = 0.05
 chromatic = []
 diatonic = []
-
+media = {}
 
 #
 # Play one sound with volume setted by 'volume' global variable, sending all outputs to dev null from os execution
@@ -22,7 +23,9 @@ diatonic = []
 def play_sound(sound):
     global global_volume
     os.system("amixer -M sset PCM " + str(global_volume) + "% > /dev/null 2>&1")
-    os.system("aplay " + sounds_path + sound + " -M -N > /dev/null 2>&1 &")
+    #os.system("aplay " + sounds_path + sound + " -M -N > /dev/null 2>&1 &")
+    sd.play(sound[0],sound[1])
+
 
 
 #
@@ -35,7 +38,7 @@ def read_and_play_sound(i, sound):
             press = MCP3008(i)
             if int(press.value * 100.00) > int(sensitivity[i]):
                 print("playing sound: " + sound + " - " + str(press.value*100) + "%")
-                play_sound(sound)
+                play_sound(media[sound])
                 time.sleep(max_play_time)                    
         except KeyboardInterrupt:
             break
@@ -62,6 +65,7 @@ def set_volume():
 # Read and load sounds from sounds folder path
 #
 def load_sounds(path):
+    global media
     files = []
     # Iterate directory
     for file_path in os.listdir(path):
@@ -69,11 +73,14 @@ def load_sounds(path):
         if os.path.isfile(os.path.join(path, file_path)):
             # add filename to list
             files.append(file_path)
+    
+    for file in sorted(files):
+        media[file] = sf.read(path + file)
     return sorted(files)
 
 
 #
-# Print header, include some ascii art better
+# Print header
 #
 def print_header():
     print()
