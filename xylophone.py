@@ -10,7 +10,7 @@ import threading
 #
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 global_volume = 20
-sensitivity = [25,25,25,25,25,25,85,25]
+sensitivity = [25,25,25,25,25,25,15,15]
 max_play_time = 0.075
 chromatic = []
 diatonic = []
@@ -22,7 +22,7 @@ diatonic = []
 def play_sound(sound):
     global global_volume
     os.system("amixer -M sset PCM " + str(global_volume) + "% > /dev/null 2>&1")
-    os.system("aplay " + sounds_path + sound + " > /dev/null 2>&1 &")
+    os.system("aplay " + sounds_path + sound + " -M -N > /dev/null 2>&1 &")
 
 
 #
@@ -32,10 +32,6 @@ def read_and_play_sound(i, sound):
     global max_play_time
     while True:
         try:
-            #for sound in sounds_list:
-            #    global global_volume
-            #    play_sound(sound)
-            #    time.sleep(0.3)
             press = MCP3008(i)
             if int(press.value * 100.00) > int(sensitivity[i]):
                 print("playing sound: " + sound + " - " + str(press.value*100) + "%")
@@ -56,7 +52,6 @@ def set_volume():
         try:
             pot = MCP3008(0)
             global_volume = int(pot.value * 100)
-            #print("- Volume: " + str(global_volume))
         except KeyboardInterrupt:
             break
         except:
