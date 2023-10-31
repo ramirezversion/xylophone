@@ -11,9 +11,7 @@ import threading
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 global_volume = 20
 sensitivity = [25,25,25,25,25,25,85,25]
-max_play_time = [100,100,100,100,100,100,100,100]
-active_pad = [0,0,0,0,0,0,0,0]
-pad_play_time = [0,0,0,0,0,0,0,0]
+max_play_time = 0.075
 chromatic = []
 diatonic = []
 
@@ -28,9 +26,9 @@ def play_sound(sound):
 
 
 #
-# Read sensors and play sounds
+# Read sensor and play sound
 #
-def read_and_play_sounds(sounds_list):
+def read_and_play_sound(i, sound):
     global max_play_time
     while True:
         try:
@@ -38,17 +36,11 @@ def read_and_play_sounds(sounds_list):
             #    global global_volume
             #    play_sound(sound)
             #    time.sleep(0.3)
-            for i in range(6,8):
-                press = MCP3008(i)
-                if int(press.value * 100) > sensitivity[i] and active_pad[i] == 0:
-                    active_pad[i] = 1
-                    print("playing sound: " + str(press.value*100))
-                    play_sound(sounds_list[i-6])
-                    time.sleep(0.1)                    
-                elif active_pad[i] == 1:
-                    pad_play_time[i] += 1
-                    if pad_play_time[i] > max_play_time[i]:
-                        active_pad[i] = 0
+            press = MCP3008(i)
+            if int(press.value * 100.00) > int(sensitivity[i]):
+                print("playing sound: " + sound + " - " + str(press.value*100) + "%")
+                play_sound(sound)
+                time.sleep(max_play_time)                    
         except KeyboardInterrupt:
             break
         except:
@@ -109,20 +101,28 @@ def main():
     print("- chromatic loaded!")
     print(chromatic)
     print()
-    for tone in chromatic:
-        if not "#" in tone:
-            diatonic.append(tone)
-    print("- diatonic loaded!")
-    print(diatonic)
-    print()
+    #for tone in chromatic:
+    #    if not "#" in tone:
+    #        diatonic.append(tone)
+    #print("- diatonic loaded!")
+    #print(diatonic)
+    #print()
 
+    # volume thread
     t1 = threading.Thread(target=set_volume, args=())
-    t2 = threading.Thread(target=read_and_play_sounds, args=(chromatic,))
     t1.start()
-    t2.start()
-    t1.join()
-    t2.join()
+    # threads for read values and play sounds
+    threads = []
 
+    #for sounds in chromatic:
+    for i in range(6,8):
+        t = threading.Thread(target=read_and_play_sound, args=(i,chromatic[i],))
+        t.start()
+    
+    for t in threads:
+        t.join()
+
+    t1.join()
 
 #
 # Main function
