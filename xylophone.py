@@ -12,7 +12,7 @@ import sounddevice as sd
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 global_volume = 20
 sensitivity = [25,25,25,25,25,25,15,15]
-max_play_time = 0.05
+wait_time = 0.05
 chromatic = []
 diatonic = []
 media = {}
@@ -21,8 +21,6 @@ media = {}
 # Play one sound with volume setted by 'volume' global variable, sending all outputs to dev null from os execution
 #
 def play_sound(sound):
-    global global_volume
-    os.system("amixer -M sset PCM " + str(global_volume) + "% > /dev/null 2>&1")
     #os.system("aplay " + sounds_path + sound + " -M -N > /dev/null 2>&1 &")
     sd.play(sound[0],sound[1])
 
@@ -32,14 +30,14 @@ def play_sound(sound):
 # Read sensor and play sound
 #
 def read_and_play_sound(i, sound):
-    global max_play_time
+    global wait_time
     while True:
         try:
             press = MCP3008(i)
             if int(press.value * 100.00) > int(sensitivity[i]):
                 print("playing sound: " + sound + " - " + str(press.value*100) + "%")
                 play_sound(media[sound])
-                time.sleep(max_play_time)                    
+                time.sleep(wait_time)                    
         except KeyboardInterrupt:
             break
         except:
@@ -54,7 +52,11 @@ def set_volume():
     while True:
         try:
             pot = MCP3008(0)
-            global_volume = int(pot.value * 100)
+            # +1 and -1 values because reading value is so sensitive. in this way it is reduced the number of system call to modify the volume
+            if (int(pot.value * 100) > global_volume + 1) or (int(pot.value * 100) < global_volume - 1):
+                global_volume = int(pot.value * 100)
+                os.system("amixer -M sset PCM " + str(global_volume) + "% > /dev/null 2>&1")
+                print("volume set: " + str(global_volume))
         except KeyboardInterrupt:
             break
         except:
