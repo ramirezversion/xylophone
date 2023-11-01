@@ -78,8 +78,8 @@ def load_sounds(path):
             # add filename to list
             files.append(file_path)
     
+    # Load sounds into memory for fast playing without disk reading delay
     for file in sorted(files):
-        #media[file] = sf.read(path + file)
         media[file] = pg.mixer.Sound(path + file)
     return sorted(files)
 
@@ -116,12 +116,13 @@ def main():
     #print(diatonic)
     #print()
 
-    # volume thread
+    # Volume thread
     t1 = threading.Thread(target=set_volume, args=())
     t1.start()
-    # threads for read values and play sounds
+    # Threads for read values and play sounds
     threads = []
 
+    # Create a channel for each note
     pg.mixer.set_num_channels(len(chromatic))
 
     #for sound in chromatic: - temporary set to value 6 and 7 because pin 6 and 7 are used for testing
