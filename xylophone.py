@@ -3,8 +3,7 @@ import time
 from gpiozero import MCP3008
 from time import sleep
 import threading
-import soundfile as sf
-import sounddevice as sd
+import pygame as pg
 
 #
 # Global variables
@@ -12,18 +11,20 @@ import sounddevice as sd
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 global_volume = 20
 sensitivity = [25,25,25,25,25,25,15,15]
-wait_time = 0.05
+wait_time = 0.115
 chromatic = []
 diatonic = []
 media = {}
+pg.mixer.pre_init()
+pg.init()
+
 
 #
-# Play one sound with volume setted by 'volume' global variable, sending all outputs to dev null from os execution
+# Play each sound in its own channel
 #
-def play_sound(sound):
-    #os.system("aplay " + sounds_path + sound + " -M -N > /dev/null 2>&1 &")
-    sd.play(sound[0],sound[1])
-
+def play_sound(sound, channel):
+    global pg
+    pg.mixer.Channel(channel).play(sound)
 
 
 #
@@ -31,12 +32,13 @@ def play_sound(sound):
 #
 def read_and_play_sound(i, sound):
     global wait_time
+    global global_volume
     while True:
         try:
             press = MCP3008(i)
             if int(press.value * 100.00) > int(sensitivity[i]):
-                print("playing sound: " + sound + " - " + str(press.value*100) + "%")
-                play_sound(media[sound])
+                print("playing sound: " + sound + " - " + str(int(press.value*100)) + "%")
+                play_sound(media[sound],i)
                 time.sleep(wait_time)                    
         except KeyboardInterrupt:
             break
@@ -77,7 +79,8 @@ def load_sounds(path):
             files.append(file_path)
     
     for file in sorted(files):
-        media[file] = sf.read(path + file)
+        #media[file] = sf.read(path + file)
+        media[file] = pg.mixer.Sound(path + file)
     return sorted(files)
 
 
@@ -96,6 +99,7 @@ def print_header():
 # Main
 #
 def main():
+    global pg
     # Print header
     print_header()
     print("... loading sounds")
@@ -117,6 +121,8 @@ def main():
     t1.start()
     # threads for read values and play sounds
     threads = []
+
+    pg.mixer.set_num_channels(len(chromatic))
 
     #for sound in chromatic: - temporary set to value 6 and 7 because pin 6 and 7 are used for testing
     for i in range(6,8):
