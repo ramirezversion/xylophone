@@ -118,7 +118,7 @@ def main():
     # threads for read values and play sounds
     threads = []
 
-    #for sounds in chromatic:
+    #for sound in chromatic: - temporary set to value 6 and 7 because pin 6 and 7 are used for testing
     for i in range(6,8):
         t = threading.Thread(target=read_and_play_sound, args=(i,chromatic[i],))
         t.start()
