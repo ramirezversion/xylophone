@@ -10,8 +10,8 @@ import pygame as pg
 #
 sounds_path = "/home/pi/xylophone" + "/sounds/"
 global_volume = 20
-sensitivity = [25,25,25,25,25,25,15,15]
-wait_time = 0.1
+sensitivity = [25,25,25,25,25,25,35,25]
+wait_time = 0.09
 chromatic = []
 diatonic = []
 media = {}
